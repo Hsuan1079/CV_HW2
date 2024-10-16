@@ -1,4 +1,5 @@
 import numpy as np
+import time
 import matplotlib.pyplot as plt
 import cv2
 import os
@@ -26,6 +27,7 @@ def edge_detection(channel):
     edges = cv2.Canny(channel, 100, 200)  # Canny 邊緣檢測的閾值可根據圖像調整
     return edges
 
+# normalised cross-correlation
 def ncc(a, b):
     a=a-a.mean(axis=0)
     b=b-b.mean(axis=0)
@@ -52,9 +54,10 @@ else:
     print(f"Directory {save_dir} already exists")
 
 # data 包含'.jpg' 和 '.tif' 的檔案
+start_time = time.time()
 for img in img_list:
     if img.endswith('.jpg'):
-        print(img)
+        # print(img)
         name = img.split('.')[0]
         img = cv2.imread(os.path.join(dir, img), cv2.IMREAD_GRAYSCALE)
 
@@ -82,20 +85,20 @@ for img in img_list:
         # 保存彩色影像
         save_path = os.path.join(save_dir, name + '_color.jpg')
         result = cv2.imwrite(save_path, color_image_bgr)
-        if not result:
-            print(f"Failed to save image at {save_path}")
-        else:
-            print(f"Image saved at {save_path}")
+        # if not result:
+        #     print(f"Failed to save image at {save_path}")
+        # else:
+        #     print(f"Image saved at {save_path}")
 
     elif img.endswith('.tif'):
-        print(img)
+        # print(img)
         name = img.split('.')[0]
         img = cv2.imread(os.path.join(dir, img), cv2.IMREAD_GRAYSCALE)
 
         subsample_rate = 10
 
         h, w = img.shape
-        img = img[int(h * 0.01):int(h - h * 0.02), int(w * 0.02):int(w - w * 0.02)]  # the cutting ratio depends on image
+        img = img[int(h*0.01):int(h-h*0.02), int(w*0.02):int(w-w*0.02)]
         h, w = img.shape
         height = int(h/3)
         blue = img[0:height, :]
@@ -131,10 +134,14 @@ for img in img_list:
         # 儲存之前將 RGB 轉換為 BGR (OpenCV)
         color_image_bgr = cv2.cvtColor(color_image, cv2.COLOR_RGB2BGR)
         result = cv2.imwrite(save_path, color_image_bgr)
-        if not result:
-            print(f"Failed to save image at {save_path}")
-        else:
-            print(f"Image saved at {save_path}")
+        # if not result:
+        #     print(f"Failed to save image at {save_path}")
+        # else:
+        #     print(f"Image saved at {save_path}")
     else:
-        print('Unknown file type:', img)
+        # print('Unknown file type:', img)
         continue
+
+end_time = time.time()
+execution_time = end_time - start_time
+print(f"Total execution time: {execution_time:.2f} seconds")
