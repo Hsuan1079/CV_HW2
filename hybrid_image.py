@@ -99,9 +99,8 @@ def create_hybrid_images(folder_path):
 
             # Display or save the final hybrid image
             show_image(f"Hybrid Image (Pair {number})", final_image)
-            # Optionally save the image: uncomment the line below
-            cv2.imwrite(os.path.join(r'C:\Users\IT_manager\Desktop\2024 Autumn\CV\CV_HW2\output\task1\data_output', f"hybrid_{number}.png"), final_image)
+            cv2.imwrite(os.path.join(r'output\task1\data_output', f"hybrid_{number}.png"), final_image)
 
 # Example usage
-folder_path = r'C:\Users\IT_manager\Desktop\2024 Autumn\CV\CV_HW2\data\task1and2_hybrid_pyramid'  # Replace with the path to your folder
+folder_path = r'data\task1and2_hybrid_pyramid'  # Replace with the path to your folder
 create_hybrid_images(folder_path)  # You can adjust the filter_d for more blurring
