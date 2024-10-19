@@ -49,13 +49,6 @@ def apply_ideal_filter(fft_image, filter_type="low", d=30):
     
     return fft_image * mask
 
-def show_image(title, image):
-    plt.figure(figsize=(6, 6))
-    plt.imshow(image, cmap='gray')
-    plt.title(title)
-    plt.axis('off')
-    plt.show()
-
 def resize_images_to_smallest(image1, image2):
     rows1, cols1 = image1.shape
     rows2, cols2 = image2.shape
@@ -134,8 +127,8 @@ def create_hybrid_images(folder_path):
     # Process each pair
     for number, file_pair in pairs.items():
         if len(file_pair) == 2:
-            image1 = cv2.imread(os.path.join(folder_path, file_pair[0]), 0)  # Low frequency image
-            image2 = cv2.imread(os.path.join(folder_path, file_pair[1]), 0)  # High frequency image
+            image1 = cv2.imread(os.path.join(folder_path, file_pair[0]), 0)
+            image2 = cv2.imread(os.path.join(folder_path, file_pair[1]), 0)
             
             if image1 is None or image2 is None:
                 print(f"Error loading images: {file_pair}")
