@@ -21,10 +21,8 @@ def apply_gaussian_filter(fft_image, filter_type="low", d=30):
         for j in range(cols):
             dist = np.sqrt((i - crow) ** 2 + (j - ccol) ** 2)
             if filter_type == "low":
-                # Low-pass Gaussian filter
                 mask[i, j] = np.exp(-(dist ** 2) / (2 * (d ** 2)))
             elif filter_type == "high":
-                # High-pass Gaussian filter
                 mask[i, j] = 1 - np.exp(-(dist ** 2) / (2 * (d ** 2)))
 
     return fft_image * mask
@@ -35,13 +33,11 @@ def apply_ideal_filter(fft_image, filter_type="low", d=30):
     mask = np.ones((rows, cols), np.float32)
     
     if filter_type == "low":
-        # Low-pass filter (Ideal)
         for i in range(rows):
             for j in range(cols):
                 if np.sqrt((i - crow) ** 2 + (j - ccol) ** 2) > d:
                     mask[i, j] = 0
     elif filter_type == "high":
-        # High-pass filter (Ideal)
         for i in range(rows):
             for j in range(cols):
                 if np.sqrt((i - crow) ** 2 + (j - ccol) ** 2) < d:
