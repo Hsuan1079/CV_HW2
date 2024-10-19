@@ -68,11 +68,11 @@ def gaussian_hybrid(image1, image2):
     fft_image1 = np.fft.fft2(image1_centered)
     fft_image2 = np.fft.fft2(image2_centered)
 
-    # Step 3: Apply Gaussian filters (low-pass to image1, high-pass to image2)
-    fft_image1_gaussian = apply_gaussian_filter(fft_image1, "low", d=10)  # Low-pass
-    fft_image2_gaussian = apply_gaussian_filter(fft_image2, "high", d=30)  # High-pass
+    # Step 3: Apply Gaussian filters
+    fft_image1_gaussian = apply_gaussian_filter(fft_image1, "low", d=30)
+    fft_image2_gaussian = apply_gaussian_filter(fft_image2, "high", d=30)
 
-    # Step 4: Combine the two filtered images (hybrid image creation)
+    # Step 4: Combine the two filtered images
     combined_fft = fft_image1_gaussian + fft_image2_gaussian
 
     # Step 5: Inverse Fourier Transform
@@ -95,11 +95,11 @@ def ideal_hybrid(image1, image2):
     fft_image1 = np.fft.fft2(image1_centered)
     fft_image2 = np.fft.fft2(image2_centered)
 
-    # Step 3: Apply Gaussian filters (low-pass to image1, high-pass to image2)
-    fft_image1_gaussian = apply_ideal_filter(fft_image1, "low", d=10)  # Low-pass
-    fft_image2_gaussian = apply_ideal_filter(fft_image2, "high", d=30)  # High-pass
+    # Step 3: Apply Ideal filters
+    fft_image1_gaussian = apply_ideal_filter(fft_image1, "low", d=30)
+    fft_image2_gaussian = apply_ideal_filter(fft_image2, "high", d=30)
 
-    # Step 4: Combine the two filtered images (hybrid image creation)
+    # Step 4: Combine the two filtered images
     combined_fft = fft_image1_gaussian + fft_image2_gaussian
 
     # Step 5: Inverse Fourier Transform
@@ -132,7 +132,8 @@ def create_hybrid_images(folder_path):
 
             final_gaussian_image = gaussian_hybrid(image1, image2)
             final_ideal_image = ideal_hybrid(image1, image2)
-
+            
+            cv2.imwrite(f'output/task1/data_output/Gaussian_{number}.png', final_gaussian_image)
             plt.figure(figsize=(12, 6))
             plt.subplot(1, 2, 1)
             plt.imshow(final_ideal_image, cmap='gray')
