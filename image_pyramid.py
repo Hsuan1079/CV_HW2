@@ -6,30 +6,45 @@ import matplotlib.pyplot as plt
 
 def GaussianFilter():
     sigma = 2
-    size = 6*sigma+1
-    if size % 2 == 0:
-        size += 1
-    center = size // 2
-    x = np.arange(size) - center
-    y = np.arange(size) - center
-    x, y = np.meshgrid(x, y)
+    size = (13, 13)
+    x, y = np.mgrid[-(math.floor(size[0]/2)):(math.ceil(size[0]/2)), 
+                    -(math.floor(size[0]/2)):(math.ceil(size[0]/2))]
     kernel = np.exp(-(x**2+y**2) / (2 * sigma**2))
     kernel = kernel/kernel.sum()
     return kernel
 
-def convolution(img, filterG):
-    filter_h, filter_w = filterG.shape
-    start_h, start_w = (img.shape[0] - filter_h) // 2, (img.shape[1] - filter_w) // 2
-    pad_filter = np.zeros(img.shape[:2])
-    pad_filter[start_h : start_h + filter_h, start_w : start_w + filter_w] = filterG
+def padding(img, size=(1, 1)):
+    r_pad, c_pad = size
+    row, column, ch = img.shape
+    img_pad = np.zeros((row + 2 * r_pad, column + 2 * c_pad, ch), dtype=img.dtype)
+    
+    img_pad[r_pad:-r_pad, c_pad:-c_pad] = img
+    img_pad[:r_pad, c_pad:-c_pad] = img[0:1, :, :] 
+    img_pad[-r_pad:, c_pad:-c_pad] = img[-1:, :, :] 
+    img_pad[:, :c_pad] = img_pad[:, c_pad:c_pad+1]
+    img_pad[:, -c_pad:] = img_pad[:, -c_pad-1:-c_pad] 
+    img_pad[:r_pad, :c_pad] = img[0, 0] 
+    img_pad[:r_pad, -c_pad:] = img[0, -1]
+    img_pad[-r_pad:, :c_pad] = img[-1, 0]
+    img_pad[-r_pad:, -c_pad:] = img[-1, -1] 
+    
+    return img_pad
 
-    filt_fft = np.fft.fft2(pad_filter)
-
-    result = np.zeros(img.shape)
-    for color in range(img.shape[2]):
-        img_fft = np.fft.fft2(img[:, :, color])
-        result[:, :, color] = np.fft.fftshift(np.fft.ifft2(img_fft * filt_fft)).real
-    return result
+def convolution(img, kernel):
+    k_y, k_x = kernel.shape
+    p_y = (k_y - 1) // 2
+    p_x = (k_x - 1) // 2
+    img = padding(img, (p_y, p_x))
+    row, column, ch = img.shape
+    output = np.copy(img)
+    for y in range(p_y, row - p_y):
+        for x in range(p_x, column - p_x):
+            for c in range(ch):
+                img_window = img[(y - p_y):(y + p_y) + 1, (x - p_x):(x +p_x) + 1, c]
+                output[y, x, c] = np.sum(img_window * kernel)   
+    
+    output = output[p_y:-p_y, p_x:-p_x]
+    return output
 
 def subsampling(img):
     newImg = np.zeros((img.shape[0]//2, img.shape[1]//2, img.shape[2]))
@@ -50,41 +65,43 @@ def upsampling(img, previous_layer):
             newImg[i*r:i*r+r+1, j*c:j*c+c+1] = img[i, j]
     return newImg
 
-def img_to_spectrum(img):
-    result = np.zeros(img.shape)
-    if len(img.shape) == 3:
-        result = np.fft.fft2(img, axes=(0, 1))
-    else:
-        result = np.fft.fft2(img)
-    spectrum = np.log(1 + np.abs(np.fft.fftshift(result)))
-    img_min, img_max = spectrum.min(), spectrum.max()
-    return (spectrum - img_min) / (img_max - img_min) 
+def spectrum_transfer(img):
+    row, column, ch = img.shape
+    for c in range(ch):
+        dft = np.fft.fft2(img[:, :, c])
+        spectrum = np.log(np.abs(np.fft.fftshift(dft)))
+    return spectrum
 
 def image_pyramid(img, layer):
+    Gaussian = img
     for i in range(layer):
-        previous_layer = img
-        img = convolution(img, GaussianFilter())
-        save_and_display(img, f'result/Gaussian_layer_{i}.jpg')
+        # Gaussian pyramid
+        previous_layer = Gaussian
+        Gaussian = convolution(previous_layer, GaussianFilter())
+        Gaussian = subsampling(Gaussian)
+        cv2.imwrite(f'output/Gaussian_layer_{i}.jpg', Gaussian)
 
-        if i == layer:
-            Laplacian = img
-        else:
-            img = subsampling(img)
-            upImg = upsampling(img, previous_layer)
-            Laplacian = previous_layer - upImg
-        save_and_display(Laplacian, f'result/Laplacian_layer_{i}.jpg')
+        spectrum = spectrum_transfer(Gaussian)
+        plt.imshow(spectrum)
+        plt.axis('off')
+        plt.savefig(f'output/Gaussian_spectrum_{i}.jpg', bbox_inches='tight', pad_inches=0)
 
-def save_and_display(image, filename):
-    if not os.path.exists('result'):
-        os.makedirs('result')
-    cv2.imwrite(filename, image)    
-    spectrum = img_to_spectrum(image)
-    plt.imshow(spectrum)
-    plt.title(filename)
-    plt.axis('off')
-    plt.show()
+        # Laplacian pyramid
+        highImg = previous_layer
+        lowImg = upsampling(Gaussian, previous_layer)
+        Laplacian = highImg - lowImg
+        cv2.imwrite(f'output/Laplacian_layer_{i}.jpg', Laplacian)
+
+        spectrum = spectrum_transfer(Laplacian)
+        plt.imshow(spectrum)
+        plt.axis('off')
+        plt.savefig(f'output/Laplacian_spectrum_{i}.jpg', bbox_inches='tight', pad_inches=0)
 
 # main
-layer = 5
-img = cv2.imread(f'data/test.jpg')
+layer = 4
+img = cv2.cvtColor(cv2.imread("data/task1and2_hybrid_pyramid/3_cat.bmp",), cv2.COLOR_RGB2GRAY)
+# img = cv2.cvtColor(cv2.imread("my_data/test.jpg",), cv2.COLOR_RGB2GRAY)
+img = img.reshape(img.shape[0],img.shape[1],1)
+if not os.path.exists('output'):
+        os.makedirs('output')
 image_pyramid(img, layer)
