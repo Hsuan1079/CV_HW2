@@ -79,29 +79,27 @@ def image_pyramid(img, layer):
         previous_layer = Gaussian
         Gaussian = convolution(previous_layer, GaussianFilter())
         Gaussian = subsampling(Gaussian)
-        cv2.imwrite(f'output/Gaussian_layer_{i}.jpg', Gaussian)
+        cv2.imwrite(f'output/task2/data_output/Gaussian_layer_{i}.jpg', Gaussian)
 
         spectrum = spectrum_transfer(Gaussian)
         plt.imshow(spectrum)
         plt.axis('off')
-        plt.savefig(f'output/Gaussian_spectrum_{i}.jpg', bbox_inches='tight', pad_inches=0)
+        plt.savefig(f'output/task2/data_output/Gaussian_spectrum_{i}.jpg', bbox_inches='tight', pad_inches=0)
 
         # Laplacian pyramid
         highImg = previous_layer
         lowImg = upsampling(Gaussian, previous_layer)
         Laplacian = highImg - lowImg
-        cv2.imwrite(f'output/Laplacian_layer_{i}.jpg', Laplacian)
+        cv2.imwrite(f'output/task2/data_output/Laplacian_layer_{i}.jpg', Laplacian)
 
         spectrum = spectrum_transfer(Laplacian)
         plt.imshow(spectrum)
         plt.axis('off')
-        plt.savefig(f'output/Laplacian_spectrum_{i}.jpg', bbox_inches='tight', pad_inches=0)
+        plt.savefig(f'output/task2/data_output/Laplacian_spectrum_{i}.jpg', bbox_inches='tight', pad_inches=0)
 
 # main
 layer = 4
 img = cv2.cvtColor(cv2.imread("data/task1and2_hybrid_pyramid/3_cat.bmp",), cv2.COLOR_RGB2GRAY)
 # img = cv2.cvtColor(cv2.imread("my_data/test.jpg",), cv2.COLOR_RGB2GRAY)
 img = img.reshape(img.shape[0],img.shape[1],1)
-if not os.path.exists('output'):
-        os.makedirs('output')
 image_pyramid(img, layer)
